@@ -16,7 +16,7 @@ from h5py import File as h5py_File
 from dival.reference_reconstructors import get_reference_reconstructor
 
 
-class LoDoPaB_Reconstructor():
+class Reconstructor():
     """
     The LoDoPaB reconstructed dataset was created to eliminate the need to
     reconstruct the synograms every time if you don't use it.
@@ -238,7 +238,10 @@ class LoDoPaB_Reconstructor():
         print("Success! All dataset are reconstructed.")
 
 
-# rec_db = LoDoPaB_Processor(
-#     dir_in_LoDoPaB="/home/baltz/dados/Dados_2/tcc-database/unziped/", dir_out_LoDoPaB="/tmp/a",
-#     impl="astra_cpu", rec_type="fbp", dsize=(256, 256))
-# rec_db.reconstruct()
+
+if __name__ == '__main__':
+
+    rec_db = LoDoPaB_Processor(
+        dir_in_LoDoPaB="/home/baltz/dados/Dados_2/tcc-database/unziped/", dir_out_LoDoPaB="/tmp/a",
+        impl="astra_cpu", rec_type="fbp", dsize=(256, 256))
+    # rec_db.reconstruct()
