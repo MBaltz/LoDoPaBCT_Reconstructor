@@ -229,11 +229,14 @@ class Reconstructor():
                     dir_arq_salvar_gt = os.path.join(self.dir_out_LoDoPaB, nome_arq_salvar_gt)
 
                     # Indicativo da progressão da extração
-                    print(f"> \"{nome_arq_salvar_obs}\", \"{nome_arq_salvar_gt}\"", end=" ")
-                    print(f"\t[{str(i_amostra+(id_arq_hdf5*128))}/{self.len_parts[p]}]", end="\r")
-                    
+                    if i_amostra%(2 if "cuda" in self.impl else 5) == 0:
+                        print(f"> \"{nome_arq_salvar_obs}\", \"{nome_arq_salvar_gt}\"", end=" ")
+                        print(f"\t[{str(i_amostra+(id_arq_hdf5*128))}/{self.len_parts[p]}]", end="\r")
+
                     np.save(dir_arq_salvar_obs, conteudo_obs)
                     np.save(dir_arq_salvar_gt, conteudo_gt)
+
+            print(f"\n> Part \"{p}\" is reconstructed! [{self.len_parts[p]}/{self.len_parts[p]}]")
 
         print("Success! All dataset are reconstructed.")
 
@@ -241,7 +244,7 @@ class Reconstructor():
 
 if __name__ == '__main__':
 
-    rec_db = LoDoPaB_Processor(
+    rec_db = Reconstructor(
         dir_in_LoDoPaB="/home/baltz/dados/Dados_2/tcc-database/unziped/", dir_out_LoDoPaB="/tmp/a",
         impl="astra_cpu", rec_type="fbp", dsize=(256, 256))
     # rec_db.reconstruct()
