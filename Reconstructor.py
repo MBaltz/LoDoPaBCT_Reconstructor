@@ -229,7 +229,7 @@ class Reconstructor():
                     dir_arq_salvar_gt = os.path.join(self.dir_out_LoDoPaB, nome_arq_salvar_gt)
 
                     # Indicativo da progressão da extração
-                    if i_amostra%(2 if "cuda" in self.impl else 5) == 0:
+                    if i_amostra%(25 if "cuda" in self.impl else 5) == 0:
                         print(f"> \"{nome_arq_salvar_obs}\", \"{nome_arq_salvar_gt}\"", end=" ")
                         print(f"\t[{str(i_amostra+(id_arq_hdf5*128))}/{self.len_parts[p]}]", end="\r")
 
