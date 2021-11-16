@@ -7,10 +7,9 @@ import cv2
 
 class TFDataset(Sequence):
 
-    def __init__(self, dir_trivial_lodopab, dir_rec_lodopab, part, batch_size,
+    def __init__(self, dir_rec_lodopab, part, batch_size,
         shuffle=False, return_with_channel=True):
-        
-        self.dir_trivial_lodopab = dir_trivial_lodopab
+
         self.dir_rec_lodopab = dir_rec_lodopab
         self.part = part
         self.batch_size = batch_size
