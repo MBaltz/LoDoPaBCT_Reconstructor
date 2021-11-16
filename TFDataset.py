@@ -45,19 +45,19 @@ class TFDataset(Sequence):
 
     # Seleciona a lista de ids e requisita amostras ao __data_generation
     def __getitem__(self, idx):
-        # Prepara lista sem
+        # Prepara o range de ids sem dar overflow
         range_idx = range(idx*self.batch_size, (idx+1)*self.batch_size)
+        if (idx+1)*self.batch_size >= self.len_parts[self.part]:
+            range_idx = range(idx*self.batch_size, self.len_parts[self.part])
         list_idxs = [self.indexes[x] for x in range_idx]
-        if list_idxs[-1] >= self.len_parts[self.part]:
-            list_idxs = list_idxs[0:list_idxs.index(self.len_parts[self.part])+1]
         
-        # Requisita amostras. Retorno é uma lista de tuplas (x, y)
+        # Requisita amostras. list_x/y.shape: (batch_size, linha, coluna, 1)
         list_x, list_y = self.__data_generation(list_idxs)
         return list_x, list_y
 
 
     def __len__(self):
-        return ceil(self.len_parts / self.batch_size)
+        return ceil(self.len_parts[self.part] / self.batch_size)
 
 
     # Aleatoriza os indices a cada fim de época se self.shuffle == True
@@ -70,18 +70,20 @@ class TFDataset(Sequence):
 if __name__ == '__main__':
 
     batch_size = 10
+    part = "test"
 
     dataset = TFDataset(
         "/home/baltz/dados/Dados_2/tcc-database/unziped",
         "/home/baltz/dados/Dados_2/tcc-database/reco_dataset",
-        "train", batch_size=batch_size, shuffle=False, return_with_channel=True)
+        part, batch_size=batch_size, shuffle=False, return_with_channel=True)
     
-    x, y = dataset.__getitem__(10)
+    # x, y = dataset.__getitem__(dataset.len_parts[part]-1)
+    x, y = dataset.__getitem__(ceil(dataset.len_parts[part]/batch_size)-1)
     print(x.shape)
     print(y.shape)
 
 
-    for i in range(batch_size):
+    for i in range(len(x)):
         y_cv2 = np.squeeze(y[i]*255, axis=-1)
 
         x_cv2 = np.squeeze(x[i]*255, axis=-1)
