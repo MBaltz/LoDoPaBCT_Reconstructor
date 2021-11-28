@@ -24,6 +24,10 @@ class TFDataset(Sequence):
 
     shuffle: random the order of the samples in that part of the dataset.
 
+    residual_learning: if it's True, the ground truth (Y) will be Y = Y - X,
+    where X is the observation data. So, the ground truth will be the difference
+    between the observation and the target/objective.
+
     return_with_channel: if it's True will be added the channel dimension on the
     returned batchs (representing the gray scale channel).
     Example if True:    (batch_size, x_size, y_size, 1)
@@ -31,12 +35,13 @@ class TFDataset(Sequence):
     """
 
     def __init__(self, dir_rec_lodopab, part, batch_size, shuffle=False,
-        return_with_channel=True):
+        residual_learning=False, return_with_channel=True):
 
         self.dir_rec_lodopab = dir_rec_lodopab
         self.part = part.lower()
         self.batch_size = batch_size
         self.shuffle = shuffle
+        self.residual_learning = residual_learning
         self.return_with_channel = return_with_channel
 
         self.len_parts = {"train":35820, "validation":3522, "test":3553}
@@ -61,7 +66,7 @@ class TFDataset(Sequence):
 
         for tipo in ['observation', 'ground_truth']:
             first_file = os.path.join(
-                self.dir_rec_lodopab, '{}_{}_-1.npy'.format(
+                self.dir_rec_lodopab, '{}_{}_0.npy'.format(
                     tipo, self.part))
             last_file = os.path.join(
                 self.dir_rec_lodopab, '{}_{}_{}.npy'.format(
@@ -99,8 +104,9 @@ class TFDataset(Sequence):
             dir_obs = os.path.join(self.dir_rec_lodopab, nome_obs)
             vet_gt.append(np.asarray(np.load(dir_gt, 'r').copy()))
             vet_obs.append(np.asarray(np.load(dir_obs, 'r').copy()))
-        
+
         vet_obs, vet_gt = np.asarray(vet_obs), np.asarray(vet_gt)
+        if self.residual_learning: vet_gt = vet_gt - vet_obs
         if self.return_with_channel:
             vet_obs = np.expand_dims(vet_obs, axis=-1) 
             vet_gt = np.expand_dims(vet_gt, axis=-1) 
@@ -165,18 +171,27 @@ class TFDataset(Sequence):
 if __name__ == '__main__':
     import cv2
 
-    batch_size = 10
+    batch_size = 5
     part = "test"
+    residual_learning = True
 
     dataset = TFDataset(
         "/home/baltz/dados/Dados_2/tcc-database/reco_dataset",
-        part, batch_size=batch_size, shuffle=False, return_with_channel=True)
+        part, batch_size=batch_size, shuffle=False,
+        residual_learning=residual_learning, return_with_channel=True)
     
     # x, y = dataset.__getitem__(dataset.len_parts[part]-1)
     x, y = dataset.__getitem__(ceil(dataset.len_parts[part]/batch_size)-1)
     print(x.shape)
     print(y.shape)
 
+    print(f"min_y: {np.min(y)}, max_y: {np.max(y)}")
+    print(f"min_x: {np.min(x)}, max_x: {np.max(x)}")
+
+
+    preto_branco = True # valores que serão subtraidos = preto
+    if residual_learning and preto_branco: y = (y[:,:,:,:]>0)*1
+    elif residual_learning: y = y - np.min(y); y = y / np.max(y) # Normaliza
 
     for i in range(len(x)):
         y_cv2 = np.squeeze(y[i]*255, axis=-1)
