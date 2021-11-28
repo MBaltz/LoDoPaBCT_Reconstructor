@@ -11,10 +11,11 @@ import os
 import numpy as np
 from math import ceil
 from glob import glob
-from cv2 import resize, INTER_LINEAR
 from h5py import File as h5py_File
 from dival.reference_reconstructors import get_reference_reconstructor
 
+# Uncomment just if you need resize the samples
+# from cv2 import resize, INTER_LINEAR
 
 class Reconstructor():
     """
@@ -200,16 +201,20 @@ class Reconstructor():
                     conteudo_obs = self.reconstrutor.reconstruct(conteudo_obs)
                     conteudo_obs = np.array(conteudo_obs)
 
-                    # Redimensiona a imagem final caso tenha sido indicado
+                    # Resize the final image if indicated
                     if self.dsize != None:
                         if self.dsize == (362, 362): self.dsize = None # Just Verify
                         else:
-                            conteudo_obs = resize(
-                                np.asarray(conteudo_obs), dsize=self.dsize,
-                                interpolation=INTER_LINEAR)
-                            conteudo_gt = resize(
-                                np.asarray(conteudo_gt), dsize=self.dsize,
-                                interpolation=INTER_LINEAR)
+                            try:
+                                conteudo_obs = resize(
+                                    np.asarray(conteudo_obs), dsize=self.dsize,
+                                    interpolation=INTER_LINEAR)
+                                conteudo_gt = resize(
+                                    np.asarray(conteudo_gt), dsize=self.dsize,
+                                    interpolation=INTER_LINEAR)
+                            except NameError:
+                                raise Exception("Remember to uncomment the cv2"\
+                                    "import at the beginning of the script!")
 
                     # Normalização entre [0, 1], pois o valor da
                     # reconstrução está entre números positivos e negativos
@@ -245,6 +250,7 @@ class Reconstructor():
 if __name__ == '__main__':
 
     rec_db = Reconstructor(
-        dir_in_LoDoPaB="/home/baltz/dados/Dados_2/tcc-database/unziped/", dir_out_LoDoPaB="/tmp/a",
+        dir_in_LoDoPaB="/home/baltz/dados/Dados_2/tcc-database/unziped/",
+        dir_out_LoDoPaB="/tmp/a",
         impl="astra_cpu", rec_type="fbp", dsize=(256, 256))
-    # rec_db.reconstruct()
+    rec_db.reconstruct()
