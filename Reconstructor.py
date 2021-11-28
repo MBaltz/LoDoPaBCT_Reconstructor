@@ -1,5 +1,3 @@
-#! /bin/python3
-
 """
 This script generate a reconstructed LoDoPaB-CT dataset.
 The new dataset is saved in ".npy" files (sample by sample).
@@ -13,9 +11,11 @@ from math import ceil
 from glob import glob
 from h5py import File as h5py_File
 from dival.reference_reconstructors import get_reference_reconstructor
+from dival.util.zenodo_download import download_zenodo_record
 
 # Uncomment just if you need resize the samples
 # from cv2 import resize, INTER_LINEAR
+
 
 class Reconstructor():
     """
@@ -47,7 +47,6 @@ class Reconstructor():
         
     """
 
-
     def __init__(self, dir_in_LoDoPaB, dir_out_LoDoPaB, impl="astra_cuda",
         rec_type="fbp", dsize=None):
 
@@ -64,6 +63,45 @@ class Reconstructor():
             self.rec_type, 'lodopab', impl=self.impl)
 
 
+    def download_lodopab(self):
+        """
+        Download and unzip the LoDoPaB-CT database (its trivial version with
+        synograms).
+
+        This method was copied an modified from DIVaL. See the original version:
+        https://github.com/jleuschn/dival/blob/master/dival/datasets/lodopab_dataset.py
+
+        Returns:
+        --------
+
+        True if finish correctly.
+        """
+
+        print('Before downloading, please make sure to have enough free disk '
+            'space (~150GB). After unpacking, 114.7GB will be used.')
+        print("path to store LoDoPaB-CT dataset (default '{}'):".format(self.dir_in_LoDoPaB))
+        inp = input()
+        if inp: self.dir_in_LoDoPaB = inp
+        os.makedirs(self.dir_in_LoDoPaB, exist_ok=True)
+        success = download_zenodo_record("3384092", self.dir_in_LoDoPaB)
+        
+        print('Download of LoDoPaB-CT dataset {}'.format(
+            'successful' if success else 'failed'))
+        if not success: return False
+
+        file_list = ['observation_train.zip',      'ground_truth_train.zip',
+                    'observation_validation.zip', 'ground_truth_validation.zip',
+                    'observation_test.zip',       'ground_truth_test.zip']
+        print('Unzipping zip files, this can take several minutes', flush=True)
+        for file in tqdm(file_list, desc='unzip'):
+            filename = os.path.join(DATA_PATH, file)
+            with ZipFile(filename, 'r') as f:
+                f.extractall(DATA_PATH)
+            os.remove(filename)
+        return verify_trivial_dataset()
+
+
+
     def verify_trivial_dataset(self):
         """
         Verify os the trivial (downloaded and unziped) dataset is intact in the
@@ -74,6 +112,9 @@ class Reconstructor():
 
         True if the trivial dataset is intact. Else, False.
         """
+
+        if not os.path.exists(self.dir_in_LoDoPaB): return False
+
         for part in self.parts:
             for tipo in ['observation', 'ground_truth']:
                 first_file = os.path.join(
@@ -102,6 +143,9 @@ class Reconstructor():
 
         True if the processed dataset is intact. Else, False.
         """
+
+        if not os.path.exists(self.dir_out_LoDoPaB): return False
+
         for part in self.parts:
             for tipo in ['observation', 'ground_truth']:
                 first_file = os.path.join(
@@ -137,7 +181,7 @@ class Reconstructor():
             for f in glob(os.path.join(self.dir_out_LoDoPaB, "*")):
                 print(f"> Removendo \"{f}\" ", end="\r"); os.remove(f)
             print(f"\n{self.dir_out_LoDoPaB} is clear.\n")
-        else: print("Nothing to do."); exit()
+        else: exit("Nothing to do.")
 
 
     def reconstruct(self):
@@ -155,21 +199,17 @@ class Reconstructor():
         - observation_train_93.npy
         - observation_train_3.npy
         """
-        if not os.path.exists(self.dir_in_LoDoPaB):
-            print(f"Directory {self.dir_in_LoDoPaB} does not exists!"); exit()
-        if not os.path.exists(self.dir_out_LoDoPaB):
-            print(f"Directory {self.dir_out_LoDoPaB} does not exists!"); exit()
 
-        if not self.verify_trivial_dataset(): exit()
+        if not self.verify_trivial_dataset(): self.download_lodopab()
 
         if self.verify_processed_dataset():
-            print(f"Dataset already created in {self.dir_out_LoDoPaB}"); exit()
+            exit(f"Reconstructed database already exists: {self.dir_out_LoDoPaB}")
         elif len(glob(os.path.join(self.dir_out_LoDoPaB, "*"))) > 0:
             self.__clear_out_directory()
 
         answer = input("You have more than 45GiB free in disk? [y,n] ")
         if not answer.lower() in ["y", "yes", "sim", "s"]:
-            print("Nothing to do."); exit()
+            exit("Nothing to do.")
 
         print("[Extracting hdf5 files, Reconstructing, Resizing and Normalizing]")
         print(f"Saving Files:\n> Carregando...", end="\r")
@@ -216,8 +256,8 @@ class Reconstructor():
                                 raise Exception("Remember to uncomment the cv2"\
                                     "import at the beginning of the script!")
 
-                    # Normalização entre [0, 1], pois o valor da
-                    # reconstrução está entre números positivos e negativos
+                    # Normalização entre [0, 1], pois o valor da reconstrução
+                    # está entre números positivos e negativos
                     conteudo_obs -= np.min(conteudo_obs)
                     conteudo_obs /= np.max(conteudo_obs)
                     # Multiplica a reconstrução normalizada pelo maior número
@@ -244,13 +284,16 @@ class Reconstructor():
             print(f"\n> Part \"{p}\" is reconstructed! [{self.len_parts[p]}/{self.len_parts[p]}]")
 
         print("Success! All dataset are reconstructed.")
+        print(f"Verification... all right? [{self.verify_processed_dataset()}]")
 
 
 
 if __name__ == '__main__':
 
     rec_db = Reconstructor(
+        # dir_in_LoDoPaB="/tmp/b",
         dir_in_LoDoPaB="/home/baltz/dados/Dados_2/tcc-database/unziped/",
-        dir_out_LoDoPaB="/tmp/a",
-        impl="astra_cpu", rec_type="fbp", dsize=(256, 256))
+        dir_out_LoDoPaB="/home/baltz/dados/Dados_2/tcc-database/reco_dataset/",
+        # dir_out_LoDoPaB="/tmp/a",
+        impl="astra_cpu", rec_type="fbp", dsize=(362, 362))
     rec_db.reconstruct()

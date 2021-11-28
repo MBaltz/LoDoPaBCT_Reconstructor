@@ -23,3 +23,7 @@ Example of generated files:
 - ground_truth_train_2004.npy
 - observation_train_93.npy
 - observation_train_3.npy
+
+---
+
+_Thank you [DIVal](https://github.com/jleuschn/dival)!_
