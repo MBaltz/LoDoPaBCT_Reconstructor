@@ -20,7 +20,7 @@ from dival.util.zenodo_download import download_zenodo_record
 class Reconstructor():
     """
     The LoDoPaB reconstructed dataset was created to eliminate the need to
-    reconstruct the synograms every time if you don't use it.
+    reconstruct the sinograms every time if you don't use it.
 
     So, this new dataset has the pairs (groundtruth, reconstructed observation).
     
@@ -66,7 +66,7 @@ class Reconstructor():
     def download_lodopab(self):
         """
         Download and unzip the LoDoPaB-CT database (its trivial version with
-        synograms).
+        sinograms).
 
         This method was copied an modified from DIVaL. See the original version:
         https://github.com/jleuschn/dival/blob/master/dival/datasets/lodopab_dataset.py
@@ -186,8 +186,8 @@ class Reconstructor():
 
     def reconstruct(self):
         """
-        Generate the new dataset, reconstructing the synograms and saving the
-        pairs (groundtruth, reconstructed synogram) individually for each sample
+        Generate the new dataset, reconstructing the sinograms and saving the
+        pairs (groundtruth, reconstructed sinogram) individually for each sample
         in ".npy" files in self.dir_out_LoDoPaB directory.
 
         For the reconstruction, will be used the impl, reconstructed method end

@@ -8,7 +8,7 @@ class TFDataset(Sequence):
     """
     The TFDataset is a Keras based dataset to the reconstructed LoDoPaB-CT
     database. This reconstructed dataset was developed to uses when is not
-    necessary uses the synogram as sample, but its reconstruction.
+    necessary uses the sinogram as sample, but its reconstruction.
 
     To generate the reconstructed LoDoPaB-CT database version you can use the
     script stored in `https://github.com/MBaltz/LoDoPaBCT_Reconstructor`

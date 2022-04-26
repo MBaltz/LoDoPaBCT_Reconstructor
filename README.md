@@ -1,7 +1,7 @@
 # LoDoPaB-CT Reconstructor
 This script generate a reconstructed LoDoPaB-CT dataset.
 
-The synograms are reconstructed to increase performance, if you will not use it's.
+The sinograms are reconstructed to increase performance, if you will not use it's.
 
 The new dataset is composed by ".npy" files. Each file represents a sample.
 
